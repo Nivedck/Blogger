@@ -1,36 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloggr Home</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Home - Bloggr</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <div class="home-container">
-        <h1>Welcome to Bloggr</h1>
-        <p id="welcomeText">Hello!</p>
-        <p>You have successfully logged in.</p>
-        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
-    </div>
-
-    <script>
-        const user = JSON.parse(localStorage.getItem("bloggrUser"));
-        const welcomeText = document.getElementById("welcomeText");
-
-        if (user && user.name) {
-            welcomeText.textContent = `Hello, ${user.name}!`;
-        } else {
-            welcomeText.textContent = "Hello!";
-        }
-
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-            localStorage.removeItem("bloggrUser");
-            window.location.href = "index.html";
-        });
-    </script>
+  <div class="home-container">
+    <h1 id="greet">Welcome</h1>
+    <p>Welcome to Bloggr.</p>
+    <button id="logout" class="logout-btn">Logout</button>
+  </div>
+  <script src="app.js"></script>
 </body>
-
 </html>
