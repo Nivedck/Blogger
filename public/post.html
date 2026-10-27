@@ -260,18 +260,18 @@
       });
 
       document.querySelectorAll(".reply-toggle").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const form = elFn(`reply-form-${btn.dataset.id}`);
-          if (form) form.classList.toggle("hidden");
-        });
-      });
+  btn.addEventListener("click", () => {
+    const form = elFn(`reply-form-${btn.dataset.id}`);
+    if (form) form.classList.toggle("visible");
+  });
+});
 
       document.querySelectorAll(".reply-cancel").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const form = elFn(`reply-form-${btn.dataset.id}`);
-          if (form) form.classList.add("hidden");
-        });
-      });
+  btn.addEventListener("click", () => {
+    const form = elFn(`reply-form-${btn.dataset.id}`);
+    if (form) form.classList.remove("visible");
+  });
+});
 
       document.querySelectorAll(".reply-submit").forEach(btn => {
         btn.addEventListener("click", async () => {
