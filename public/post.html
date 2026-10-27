@@ -238,7 +238,7 @@
             ${replyBtn}
           </div>
           ${c.replies && c.replies.length ? `<div class="replies">${repliesHTML}</div>` : ""}
-          <div class="reply-form hidden" id="reply-form-${escHtmlFn(c._id)}">
+          <div class="reply-form" id="reply-form-${escHtmlFn(c._id)}">
             <div class="form-group mt-sm">
               <textarea class="reply-input" placeholder="Write a reply…" rows="2" maxlength="3000"></textarea>
             </div>
