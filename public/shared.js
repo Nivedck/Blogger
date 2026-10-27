@@ -111,6 +111,27 @@ function fmtDate(iso) {
   });
 }
 
+/**
+ * Human-friendly relative time: 'just now', '5 minutes ago', '2 days ago'.
+ * Falls back to the absolute formatted date for anything older than a week.
+ */
+function timeAgo(iso) {
+  if (!iso) return "";
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diff = now - then;            // milliseconds
+  const sec  = Math.floor(diff / 1000);
+  const min  = Math.floor(sec  / 60);
+  const hr   = Math.floor(min  / 60);
+  const day  = Math.floor(hr   / 24);
+
+  if (sec  <  60)  return "just now";
+  if (min  <  60)  return min  === 1 ? "1 minute ago"  : `${min} minutes ago`;
+  if (hr   <  24)  return hr   === 1 ? "1 hour ago"    : `${hr} hours ago`;
+  if (day  <   7)  return day  === 1 ? "yesterday"     : `${day} days ago`;
+  return fmtDate(iso);
+}
+
 function fmtTags(tags) {
   if (!tags || !tags.length) return "";
   return tags.map(t => `<a class="tag" href="/explore.html?tag=${encodeURIComponent(t)}">${escHtml(t)}</a>`).join(" ");
@@ -154,9 +175,10 @@ function renderPagination(containerId, currentPage, totalPages, onPageChange) {
 
 
 function blogCardHTML(blog) {
-  const date = fmtDate(blog.publishedAt || blog.createdAt);
+  const date   = timeAgo(blog.publishedAt || blog.createdAt);
+  const absDate = fmtDate(blog.publishedAt || blog.createdAt);
   const author = blog.author?.name || "Unknown";
-  const tags = fmtTags(blog.tags);
+  const tags   = fmtTags(blog.tags);
   const draftBadge = blog.status === "draft" ? `<span class="draft-badge">Draft</span>` : "";
   return `
     <div class="blog-card">
@@ -166,7 +188,7 @@ function blogCardHTML(blog) {
       <div class="blog-card-meta">
         <span>${escHtml(author)}</span>
         <span>·</span>
-        <span>${date}</span>
+        <span title="${escHtml(absDate)}">${date}</span>
         ${tags ? `<span>·</span>${tags}` : ""}
       </div>
     </div>`;
@@ -175,6 +197,6 @@ function blogCardHTML(blog) {
 window.Bloggr = {
   api, getSession, requireSession, requireAdmin,
   renderNav, el, setHTML, setText, show, hide,
-  showAlert, hideAlert, fmtDate, fmtTags, escHtml,
+  showAlert, hideAlert, fmtDate, timeAgo, fmtTags, escHtml,
   safeRenderContent, renderPagination, blogCardHTML
 };

@@ -97,7 +97,7 @@
   <script>
     const {
       api: apiClient, getSession: getSessionFn, renderNav: renderNavFn, el: elFn, setHTML: setHTMLFn, setText: setTextFn, show: showFn, hide: hideFn,
-      showAlert: showAlertFn, hideAlert: hideAlertFn, escHtml: escHtmlFn, fmtDate: fmtDateFn, fmtTags: fmtTagsFn, safeRenderContent: safeRenderContentFn
+      showAlert: showAlertFn, hideAlert: hideAlertFn, escHtml: escHtmlFn, fmtDate: fmtDateFn, timeAgo: timeAgoFn, fmtTags: fmtTagsFn, safeRenderContent: safeRenderContentFn
     } = window.Bloggr;
 
     const params = new URLSearchParams(window.location.search);
@@ -130,7 +130,8 @@
       elFn("post-meta").innerHTML =
         `<a href="profile.html?id=${escHtmlFn(authorId)}">${escHtmlFn(authorName)}</a>
          <span>·</span>
-         <span>${fmtDateFn(blog.publishedAt || blog.createdAt)}</span>`;
+         <span title="${escHtmlFn(fmtDateFn(blog.publishedAt || blog.createdAt))}">${timeAgoFn(blog.publishedAt || blog.createdAt)}</span>`;
+
 
       elFn("tags-row").innerHTML = fmtTagsFn(blog.tags);
       elFn("post-body").innerHTML = safeRenderContentFn(blog.content);
@@ -230,7 +231,8 @@
         <div class="comment" id="comment-${escHtmlFn(c._id)}">
           <div class="comment-header">
             <span class="comment-author">${escHtmlFn(c.author?.name || "Unknown")}</span>
-            <span class="comment-date">${fmtDateFn(c.createdAt)}</span>
+            <span class="text-muted" aria-hidden="true">·</span>
+            <span class="comment-date" title="${escHtmlFn(c.createdAt)}">${timeAgoFn(c.createdAt)}</span>
             ${canDelete ? `<button class="btn btn-ghost btn-sm text-danger delete-comment-btn" data-id="${escHtmlFn(c._id)}" style="margin-left:auto">Delete</button>` : ""}
           </div>
           <div class="comment-body">${escHtmlFn(c.content)}</div>
