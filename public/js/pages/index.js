@@ -8,7 +8,14 @@ async function loadFeaturedPost() {
   const { ok, data } = await api("/api/blogs?page=1");
   const blog = ok && data?.blogs?.[0];
   if (!blog) {
-    el("featured-section")?.classList.add("hidden");
+    el("featured-post").innerHTML = `
+      <div class="feature-copy">
+        <span class="eyebrow">The shelf is open</span>
+        <h3>The first featured story is waiting to be published.</h3>
+        <p>Write something thoughtful, publish it, and it will appear here for the next reader.</p>
+        <a href="editor.html" class="btn btn-primary">Write a story <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="feature-art" aria-hidden="true"></div>`;
     return;
   }
 

@@ -80,7 +80,11 @@ Follow the prompts to configure the account. Public registration creates regular
 
 ```text
 Blogger/
-├── public/             # Frontend pages, styles, and scripts
+├── public/             # Frontend pages and styles
+│   └── js/
+│       ├── components/ # Reusable UI renderers
+│       ├── core/       # API, auth, DOM, and formatting modules
+│       └── pages/      # One ES module entry point per page
 ├── scripts/            # Administrative setup scripts
 ├── src/
 │   ├── config/         # Database configuration

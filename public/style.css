@@ -711,7 +711,7 @@ hr {
 }
 
 /* ── Editorial home ─────────────────────────────────────────── */
-.home-page { overflow: hidden; }
+.home-page { overflow-x: hidden; }
 .home-hero {
   max-width: var(--wide-w);
   min-height: 500px;
