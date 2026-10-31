@@ -1,154 +1,38 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin – Bloggr</title>
-  <meta name="description" content="Bloggr admin moderation panel.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Bloggr</title>
+<meta name="description" content="Bloggr admin moderation panel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="page">
-    <h1 class="page-title">Admin panel</h1>
-
-    <div class="admin-tabs" role="tablist">
-      <button class="admin-tab active" role="tab" data-tab="reports">Reports</button>
-      <button class="admin-tab"        role="tab" data-tab="users">Users</button>
-    </div>
-
-
-    <div id="tab-reports">
-      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
-        <label for="status-filter" class="text-sm">Filter by status:</label>
-        <select id="status-filter" style="width:auto">
-          <option value="">All</option>
-          <option value="pending">Pending</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="resolved">Resolved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-        <button class="btn btn-secondary btn-sm" id="refresh-reports-btn">Refresh</button>
-      </div>
-      <div id="reports-list">
-        <div class="loading-row"><span class="spinner"></span> Loading…</div>
-      </div>
-      <div id="reports-pagination" class="pagination"></div>
-    </div>
-
-
-    <div id="tab-users" class="hidden">
-      <div id="users-list">
-        <div class="loading-row"><span class="spinner"></span> Loading…</div>
-      </div>
-      <div id="users-pagination" class="pagination"></div>
-    </div>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const {
-      api: apiClient, requireAdmin: requireAdminFn, renderNav: renderNavFn, el: elFn, setHTML: setHTMLFn, setText: setTextFn,
-      show: showFn, hide: hideFn, escHtml: escHtmlFn, fmtDate: fmtDateFn, renderPagination: renderPaginationFn
-    } = window.Bloggr;
-
-    let reportsPage = 1;
-    let usersPage   = 1;
-
-    (async () => {
-      const user = await requireAdminFn("/explore.html");
-      if (!user) return;
-      await renderNavFn("/admin.html");
-      await loadReports();
-    })();
-
-    document.querySelectorAll(".admin-tab").forEach(tab => {
-      tab.addEventListener("click", async () => {
-        document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        const name = tab.dataset.tab;
-        elFn("tab-reports").classList.toggle("hidden", name !== "reports");
-        elFn("tab-users").classList.toggle("hidden",   name !== "users");
-        if (name === "users") await loadUsers();
-      });
-    });
-
-    async function loadReports(page = reportsPage) {
-      reportsPage = page;
-      setHTMLFn("reports-list", `<div class="loading-row"><span class="spinner"></span> Loading…</div>`);
-      const status = elFn("status-filter").value;
-      const qs = new URLSearchParams({ page, status });
-      const { ok, data } = await apiClient(`/api/reports?${qs}`);
-      if (!ok) { setHTMLFn("reports-list", `<p class="text-muted text-sm">Failed to load reports.</p>`); return; }
-
-      if (!data.reports.length) {
-        setHTMLFn("reports-list", `<div class="empty-state"><p>No reports found.</p></div>`);
-        setHTMLFn("reports-pagination", "");
-        return;
-      }
-
-      setHTMLFn("reports-list", data.reports.map(r => reportRowHTML(r)).join(""));
-      attachReportHandlers();
-      renderPaginationFn("reports-pagination", reportsPage, data.totalPages, (p) => loadReports(p));
-    }
-
-    function reportRowHTML(r) {
-      return `
-        <div class="report-row" id="report-${escHtmlFn(r._id)}">
-          <div class="report-target">${escHtmlFn(r.targetType)}: target ID ${escHtmlFn(String(r.target))}</div>
-          <div class="report-reason">"${escHtmlFn(r.reason)}"</div>
-          <div class="report-meta">
-            Reported by ${escHtmlFn(r.reporter?.name || "?")} · ${fmtDateFn(r.createdAt)} ·
-            Status: <strong>${escHtmlFn(r.status)}</strong>
-          </div>
-          ${r.status === "pending" ? `
-            <div style="display:flex;gap:.4rem;margin-top:.4rem">
-              <button class="btn btn-secondary btn-sm resolve-btn" data-id="${escHtmlFn(r._id)}" data-status="resolved">Resolve</button>
-              <button class="btn btn-ghost btn-sm reject-btn" data-id="${escHtmlFn(r._id)}" data-status="rejected">Reject</button>
-              <button class="btn btn-ghost btn-sm review-btn" data-id="${escHtmlFn(r._id)}" data-status="reviewed">Mark reviewed</button>
-            </div>` : ""}
-        </div>`;
-    }
-
-    function attachReportHandlers() {
-      document.querySelectorAll("[data-status]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const { ok } = await apiClient(`/api/reports/${btn.dataset.id}/status`, {
-            method: "PATCH",
-            body: JSON.stringify({ status: btn.dataset.status })
-          });
-          if (ok) loadReports(reportsPage);
-        });
-      });
-    }
-
-    elFn("status-filter").addEventListener("change", () => loadReports(1));
-    elFn("refresh-reports-btn").addEventListener("click", () => loadReports(1));
-
-    async function loadUsers(page = usersPage) {
-      usersPage = page;
-      setHTMLFn("users-list", `<div class="loading-row"><span class="spinner"></span> Loading…</div>`);
-      const { ok, data } = await apiClient(`/api/users?page=${page}`);
-      if (!ok) { setHTMLFn("users-list", `<p class="text-muted text-sm">Failed to load users.</p>`); return; }
-
-      if (!data.users.length) { setHTMLFn("users-list", `<div class="empty-state"><p>No users found.</p></div>`); return; }
-
-      const rows = data.users.map(u => `
-        <div class="report-row">
-          <div class="report-target">
-            <a href="profile.html?id=${escHtmlFn(u._id)}">${escHtmlFn(u.name)}</a>
-            ${u.role === "admin" ? `<span class="draft-badge" style="background:#dbeafe;border-color:#93c5fd;color:#1e40af">Admin</span>` : ""}
-          </div>
-          <div class="report-reason">${escHtmlFn(u.email)}</div>
-          <div class="report-meta">Joined ${fmtDateFn(u.createdAt)}</div>
-        </div>`).join("");
-
-      setHTMLFn("users-list", rows);
-      renderPaginationFn("users-pagination", usersPage, data.totalPages, (p) => loadUsers(p));
-    }
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="page">
+<h1 class="page-title">Admin panel</h1>
+<div class="admin-tabs" role="tablist">
+<button class="admin-tab active" role="tab" data-tab="reports">Reports</button><button class="admin-tab" role="tab" data-tab="users">Users</button>
+</div>
+<div id="tab-reports">
+<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+<label for="status-filter" class="text-sm">Filter by status:</label><select id="status-filter" style="width:auto"><option value="">All</option>
+<option value="pending">Pending</option>
+<option value="reviewed">Reviewed</option>
+<option value="resolved">Resolved</option>
+<option value="rejected">Rejected</option></select><button class="btn btn-secondary btn-sm" id="refresh-reports-btn">Refresh</button>
+</div>
+<div id="reports-list"><div class="loading-row">
+<span class="spinner"></span> Loading…</div></div>
+<div id="reports-pagination" class="pagination"></div>
+</div>
+<div id="tab-users" class="hidden">
+<div id="users-list"><div class="loading-row">
+<span class="spinner"></span> Loading…</div></div>
+<div id="users-pagination" class="pagination"></div>
+</div>
+</div>
+<script type="module" src="js/pages/admin.js"></script>
 </body>
 </html>

@@ -1,145 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Explore – Bloggr</title>
-  <meta name="description" content="Browse and search published blog posts on Bloggr.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explore – Bloggr</title>
+<meta name="description" content="Browse and search published blog posts on Bloggr.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="page">
-    <div class="explore-layout">
-      <main>
-        <header class="explore-heading">
-          <span class="eyebrow">The reading room</span>
-          <h1>Stories worth sitting with.</h1>
-          <p>Find sharp ideas, generous perspectives, and writers with something to say.</p>
-        </header>
-        <div class="filter-bar">
-          <input type="search" id="search-input" placeholder="Search posts…" aria-label="Search posts">
-          <button class="btn btn-secondary btn-sm" id="search-btn">Search</button>
-        </div>
-
-        <div id="tag-filter-strip" class="mb-md" style="display:flex;gap:.4rem;flex-wrap:wrap;"></div>
-
-        <div id="blog-list">
-          <div class="loading-row"><span class="spinner"></span> Loading…</div>
-        </div>
-        <div id="pagination" class="pagination"></div>
-      </main>
-
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="sidebar-block">
-          <p class="sidebar-title">Popular tags</p>
-          <div id="popular-tags" style="display:flex;flex-wrap:wrap;gap:.35rem;">
-            <span class="text-muted text-sm">Loading…</span>
-          </div>
-        </div>
-        <div class="sidebar-block" id="write-cta" style="display:none">
-          <p class="sidebar-title">Your writing</p>
-          <a href="editor.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">
-            Write a post
-          </a>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const { api: apiClient, getSession: getSessionFn, renderNav: renderNavFn, el: elFn, setHTML: setHTMLFn, escHtml: escHtmlFn,
-            blogCardHTML: blogCardHTMLFn, renderPagination: renderPaginationFn, fmtTags: fmtTagsFn } = window.Bloggr;
-
-    let currentPage = 1;
-    let currentTag  = "";
-    let currentSearch = "";
-
-    // Read query params
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("tag"))    currentTag    = params.get("tag");
-    if (params.get("search")) currentSearch = params.get("search");
-    if (params.get("page"))   currentPage   = Number(params.get("page")) || 1;
-
-    if (currentSearch) elFn("search-input").value = currentSearch;
-
-    (async () => {
-      await renderNavFn("/explore.html");
-      const user = await getSessionFn();
-      if (user) elFn("write-cta").style.display = "block";
-      await loadBlogs();
-      await loadPopularTags();
-      updateTagStrip();
-    })();
-
-    async function loadBlogs(page = currentPage) {
-      currentPage = page;
-      setHTMLFn("blog-list", `<div class="loading-row"><span class="spinner"></span> Loading…</div>`);
-      setHTMLFn("pagination", "");
-
-      const qs = new URLSearchParams({
-        page: currentPage,
-        search: currentSearch,
-        tag: currentTag
-      });
-      const { ok, data } = await apiClient(`/api/blogs?${qs}`);
-
-      if (!ok) {
-        setHTMLFn("blog-list", `<div class="empty-state"><p>Failed to load posts.</p></div>`);
-        return;
-      }
-
-      if (!data.blogs || data.blogs.length === 0) {
-        setHTMLFn("blog-list", `<div class="empty-state"><p>No posts found.</p>
-          ${currentTag || currentSearch ? `<p><a href="explore.html">Clear filters</a></p>` : ""}</div>`);
-        return;
-      }
-
-      setHTMLFn("blog-list",
-        `<div class="blog-list">${data.blogs.map(blogCardHTMLFn).join("")}</div>`);
-
-      renderPaginationFn("pagination", currentPage, data.totalPages, (p) => loadBlogs(p));
-    }
-
-    async function loadPopularTags() {
-      const { ok, data } = await apiClient("/api/blogs?page=1");
-      if (!ok || !data.blogs) return;
-      const tagCount = {};
-      data.blogs.forEach(b => (b.tags || []).forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; }));
-      const sorted = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
-      if (!sorted.length) {
-        setHTMLFn("popular-tags", `<span class="text-muted text-sm">No tags yet</span>`);
-        return;
-      }
-      setHTMLFn("popular-tags", sorted.map(([t]) =>
-        `<a class="tag" href="explore.html?tag=${encodeURIComponent(t)}">${escHtmlFn(t)}</a>`
-      ).join(""));
-    }
-
-    function updateTagStrip() {
-      const strip = elFn("tag-filter-strip");
-      if (currentTag) {
-        strip.innerHTML = `<span class="text-sm text-muted">Filtering by tag:</span>
-          <a class="tag" href="explore.html">${escHtmlFn(currentTag)} ✕</a>`;
-      } else {
-        strip.innerHTML = "";
-      }
-    }
-
-    elFn("search-btn").addEventListener("click", () => {
-      currentSearch = elFn("search-input").value.trim();
-      currentPage = 1;
-      loadBlogs();
-    });
-
-    elFn("search-input").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") elFn("search-btn").click();
-    });
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="page"><div class="explore-layout">
+<main><header class="explore-heading"><span class="eyebrow">The reading room</span><h1>Stories worth sitting with.</h1>
+<p>Find sharp ideas, generous perspectives, and writers with something to say.</p></header><div class="filter-bar">
+<input type="search" id="search-input" placeholder="Search posts…" aria-label="Search posts"><button class="btn btn-secondary btn-sm" id="search-btn">Search</button>
+</div>
+<div id="tag-filter-strip" class="mb-md" style="display:flex;gap:.4rem;flex-wrap:wrap;"></div>
+<div id="blog-list"><div class="loading-row">
+<span class="spinner"></span> Loading…</div></div>
+<div id="pagination" class="pagination"></div></main><aside class="sidebar"><div class="sidebar-block">
+<p class="sidebar-title">Popular tags</p>
+<div id="popular-tags" style="display:flex;flex-wrap:wrap;gap:.35rem;"><span class="text-muted text-sm">Loading…</span></div>
+</div>
+<div class="sidebar-block" id="write-cta" style="display:none">
+<p class="sidebar-title">Your writing</p>
+<a href="editor.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Write a post</a>
+</div></aside>
+</div></div>
+<script type="module" src="js/pages/explore.js"></script>
 </body>
 </html>

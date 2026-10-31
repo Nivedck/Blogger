@@ -1,310 +1,54 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Post – Bloggr</title>
-  <meta name="description" content="Read and interact with a Bloggr post.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post – Bloggr</title>
+<meta name="description" content="Read and interact with a Bloggr post.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="page-narrow">
-    <!-- Loading state -->
-    <div id="loading" class="loading-row"><span class="spinner"></span> Loading…</div>
-
-    <!-- Error state -->
-    <div id="error-state" class="empty-state hidden">
-      <h2>Post not found</h2>
-      <p><a href="explore.html">← Back to explore</a></p>
-    </div>
-
-    <!-- Post content -->
-    <article id="post-content" class="hidden">
-      <header class="post-header">
-        <h1 class="post-title" id="post-title"></h1>
-        <div class="post-meta" id="post-meta"></div>
-        <div style="margin-top:.75rem" id="tags-row"></div>
-      </header>
-
-      <hr>
-
-      <div class="post-body" id="post-body"></div>
-
-      <hr>
-
-      <!-- Interaction strip -->
-      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.5rem">
-        <div class="interaction-strip">
-          <button class="vote-btn" id="upvote-btn" title="Upvote">
-            ▲ <span id="upvote-count">0</span>
-          </button>
-          <button class="vote-btn" id="downvote-btn" title="Downvote">
-            ▼ <span id="downvote-count">0</span>
-          </button>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:.5rem" id="author-actions"></div>
-      </div>
-
-      <div id="report-row" class="hidden" style="margin-bottom:1.5rem">
-        <button class="btn btn-ghost btn-sm text-muted" id="report-btn">Report this post</button>
-      </div>
-    </article>
-
-    <!-- Comments -->
-    <section class="comment-thread hidden" id="comment-section">
-      <h2 class="comment-section-title" id="comment-section-title">Comments</h2>
-
-      <div id="comment-form-wrap">
-        <div class="alert alert-error hidden" id="comment-alert"></div>
-        <form id="comment-form">
-          <div class="form-group">
-            <label for="comment-input" class="sr-only">Write a comment</label>
-            <textarea id="comment-input" placeholder="Write a comment…" rows="3" maxlength="3000"></textarea>
-          </div>
-          <div style="display:flex;justify-content:flex-end">
-            <button type="submit" class="btn btn-primary btn-sm" id="comment-submit">Post comment</button>
-          </div>
-        </form>
-      </div>
-
-      <div id="comments-list" style="margin-top:1rem"></div>
-    </section>
-
-    <!-- Report modal -->
-    <div id="report-modal" class="hidden" style="
-      position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;
-      display:flex;align-items:center;justify-content:center;padding:1rem">
-      <div class="auth-card" style="max-width:420px;width:100%">
-        <h2 style="margin-bottom:1rem">Report this post</h2>
-        <div class="alert alert-error hidden" id="report-alert"></div>
-        <div class="form-group">
-          <label for="report-reason">Reason</label>
-          <textarea id="report-reason" rows="3" maxlength="1000" placeholder="Describe the issue…"></textarea>
-        </div>
-        <div style="display:flex;gap:.5rem;justify-content:flex-end">
-          <button class="btn btn-secondary btn-sm" id="report-cancel">Cancel</button>
-          <button class="btn btn-danger btn-sm" id="report-submit">Submit report</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const {
-      api: apiClient, getSession: getSessionFn, renderNav: renderNavFn, el: elFn, setHTML: setHTMLFn, setText: setTextFn, show: showFn, hide: hideFn,
-      showAlert: showAlertFn, hideAlert: hideAlertFn, escHtml: escHtmlFn, fmtDate: fmtDateFn, timeAgo: timeAgoFn, fmtTags: fmtTagsFn, safeRenderContent: safeRenderContentFn
-    } = window.Bloggr;
-
-    const params = new URLSearchParams(window.location.search);
-    const blogId = params.get("id");
-    let session = null;
-
-    if (!blogId) {
-      hideFn("loading");
-      showFn("error-state");
-    }
-
-    (async () => {
-      await renderNavFn();
-      session = await getSessionFn();
-      if (blogId) await loadPost();
-    })();
-
-    async function loadPost() {
-      const { ok, data } = await apiClient(`/api/blogs/${blogId}`);
-      hideFn("loading");
-
-      if (!ok) { showFn("error-state"); return; }
-
-      const { blog, voteSummary } = data;
-      document.title = `${blog.title} – Bloggr`;
-      setTextFn("post-title", blog.title);
-
-      const authorName = blog.author?.name || "Unknown";
-      const authorId   = blog.author?._id;
-      elFn("post-meta").innerHTML =
-        `<a href="profile.html?id=${escHtmlFn(authorId)}">${escHtmlFn(authorName)}</a>
-         <span>·</span>
-         <span title="${escHtmlFn(fmtDateFn(blog.publishedAt || blog.createdAt))}">${timeAgoFn(blog.publishedAt || blog.createdAt)}</span>`;
-
-
-      elFn("tags-row").innerHTML = fmtTagsFn(blog.tags);
-      elFn("post-body").innerHTML = safeRenderContentFn(blog.content);
-      renderVotes(voteSummary);
-
-      if (session && (String(session._id) === String(blog.author?._id) || session.role === "admin")) {
-        elFn("author-actions").innerHTML = `
-          <a class="btn btn-secondary btn-sm" href="editor.html?id=${escHtmlFn(blog._id)}">Edit</a>
-          <button class="btn btn-danger btn-sm" id="delete-btn">Delete</button>`;
-        elFn("delete-btn").addEventListener("click", deletePost);
-      }
-
-      if (session && String(session._id) !== String(blog.author?._id)) {
-        showFn("report-row");
-      }
-
-      showFn("post-content");
-      showFn("comment-section");
-      if (!session) {
-        setHTMLFn("comment-form-wrap",
-          `<p class="text-muted text-sm"><a href="login.html">Log in</a> to comment.</p>`);
-      }
-      await loadComments();
-    }
-
-    function renderVotes(vs) {
-      setTextFn("upvote-count", vs.upvotes || 0);
-      setTextFn("downvote-count", vs.downvotes || 0);
-      elFn("upvote-btn").className   = "vote-btn" + (vs.userVote === 1  ? " active-up"   : "");
-      elFn("downvote-btn").className = "vote-btn" + (vs.userVote === -1 ? " active-down" : "");
-    }
-
-    elFn("upvote-btn").addEventListener("click", () => castVote(1));
-    elFn("downvote-btn").addEventListener("click", () => castVote(-1));
-
-    async function castVote(value) {
-      if (!session) { window.location.href = "/login.html"; return; }
-      const { ok, data } = await apiClient(`/api/votes/${blogId}`, {
-        method: "POST",
-        body: JSON.stringify({ value })
-      });
-      if (ok) renderVotes(data);
-    }
-
-    async function deletePost() {
-      if (!confirm("Delete this post and all its comments? This cannot be undone.")) return;
-      const { ok } = await apiClient(`/api/blogs/${blogId}`, { method: "DELETE" });
-      if (ok) window.location.href = "/explore.html";
-    }
-
-    elFn("report-btn").addEventListener("click", () => {
-      showFn("report-modal");
-      hideFn("report-alert");
-      elFn("report-reason").value = "";
-    });
-    elFn("report-cancel").addEventListener("click", () => hideFn("report-modal"));
-    elFn("report-submit").addEventListener("click", async () => {
-      hideAlertFn("report-alert");
-      const reason = elFn("report-reason").value.trim();
-      if (!reason) { showAlertFn("report-alert", "Please describe the issue"); return; }
-      const { ok, data } = await apiClient("/api/reports", {
-        method: "POST",
-        body: JSON.stringify({ targetType: "Blog", targetId: blogId, reason })
-      });
-      if (ok) {
-        hideFn("report-modal");
-        hideFn("report-row");
-      } else {
-        showAlertFn("report-alert", data?.message || "Could not submit report");
-      }
-    });
-
-    async function loadComments() {
-      const { ok, data } = await apiClient(`/api/comments/${blogId}`);
-      if (!ok) { setHTMLFn("comments-list", `<p class="text-muted text-sm">Could not load comments.</p>`); return; }
-
-      const comments = data.comments || [];
-      setTextFn("comment-section-title", `Comments (${comments.length})`);
-
-      if (!comments.length) {
-        setHTMLFn("comments-list", `<p class="text-muted text-sm">No comments yet. Be the first!</p>`);
-        return;
-      }
-
-      setHTMLFn("comments-list", comments.map(c => commentHTML(c)).join(""));
-      attachCommentHandlers();
-    }
-
-    function commentHTML(c) {
-      const canDelete = session && (String(session._id) === String(c.author?._id) || session.role === "admin");
-      const repliesHTML = (c.replies || []).map(r => commentHTML(r)).join("");
-      const replyBtn = session && !c.parentComment
-        ? `<button class="btn btn-ghost btn-sm text-muted reply-toggle" data-id="${escHtmlFn(c._id)}">Reply</button>`
-        : "";
-
-      return `
-        <div class="comment" id="comment-${escHtmlFn(c._id)}">
-          <div class="comment-header">
-            <span class="comment-author">${escHtmlFn(c.author?.name || "Unknown")}</span>
-            <span class="text-muted" aria-hidden="true">·</span>
-            <span class="comment-date" title="${escHtmlFn(c.createdAt)}">${timeAgoFn(c.createdAt)}</span>
-            ${canDelete ? `<button class="btn btn-ghost btn-sm text-danger delete-comment-btn" data-id="${escHtmlFn(c._id)}" style="margin-left:auto">Delete</button>` : ""}
-          </div>
-          <div class="comment-body">${escHtmlFn(c.content)}</div>
-          <div style="margin-top:.3rem;display:flex;gap:.3rem">
-            ${replyBtn}
-          </div>
-          ${c.replies && c.replies.length ? `<div class="replies">${repliesHTML}</div>` : ""}
-          <div class="reply-form" id="reply-form-${escHtmlFn(c._id)}">
-            <div class="form-group mt-sm">
-              <textarea class="reply-input" placeholder="Write a reply…" rows="2" maxlength="3000"></textarea>
-            </div>
-            <div style="display:flex;gap:.4rem;justify-content:flex-end">
-              <button class="btn btn-secondary btn-sm reply-cancel" data-id="${escHtmlFn(c._id)}">Cancel</button>
-              <button class="btn btn-primary btn-sm reply-submit" data-id="${escHtmlFn(c._id)}">Reply</button>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    function attachCommentHandlers() {
-      document.querySelectorAll(".delete-comment-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          if (!confirm("Delete this comment?")) return;
-          const { ok } = await apiClient(`/api/comments/${blogId}/${btn.dataset.id}`, { method: "DELETE" });
-          if (ok) loadComments();
-        });
-      });
-
-      document.querySelectorAll(".reply-toggle").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const form = elFn(`reply-form-${btn.dataset.id}`);
-    if (form) form.classList.toggle("visible");
-  });
-});
-
-      document.querySelectorAll(".reply-cancel").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const form = elFn(`reply-form-${btn.dataset.id}`);
-    if (form) form.classList.remove("visible");
-  });
-});
-
-      document.querySelectorAll(".reply-submit").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const form = elFn(`reply-form-${btn.dataset.id}`);
-          const content = form?.querySelector(".reply-input")?.value.trim();
-          if (!content) return;
-          const { ok } = await apiClient(`/api/comments/${blogId}`, {
-            method: "POST",
-            body: JSON.stringify({ content, parentCommentId: btn.dataset.id })
-          });
-          if (ok) loadComments();
-        });
-      });
-    }
-
-    elFn("comment-form")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideAlertFn("comment-alert");
-      const content = elFn("comment-input").value.trim();
-      if (!content) return;
-      const { ok, data } = await apiClient(`/api/comments/${blogId}`, {
-        method: "POST",
-        body: JSON.stringify({ content })
-      });
-      if (ok) {
-        elFn("comment-input").value = "";
-        await loadComments();
-      } else {
-        showAlertFn("comment-alert", data?.message || "Could not post comment");
-      }
-    });
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="page-narrow">
+<div id="loading" class="loading-row">
+<span class="spinner"></span> Loading…</div>
+<div id="error-state" class="empty-state hidden">
+<h2>Post not found</h2>
+<p><a href="explore.html">← Back to explore</a></p>
+</div>
+<article id="post-content" class="hidden"><header class="post-header"><h1 class="post-title" id="post-title"></h1>
+<div class="post-meta" id="post-meta"></div>
+<div style="margin-top:.75rem" id="tags-row"></div></header><hr>
+<div class="post-body" id="post-body"></div>
+<hr>
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.5rem">
+<div class="interaction-strip">
+<button class="vote-btn" id="upvote-btn" title="Upvote">▲ <span id="upvote-count">0</span></button><button class="vote-btn" id="downvote-btn" title="Downvote">▼ <span id="downvote-count">0</span></button>
+</div>
+<div style="margin-left:auto;display:flex;gap:.5rem" id="author-actions"></div>
+</div>
+<div id="report-row" class="hidden" style="margin-bottom:1.5rem"><button class="btn btn-ghost btn-sm text-muted" id="report-btn">Report this post</button></div></article><section class="comment-thread hidden" id="comment-section"><h2 class="comment-section-title" id="comment-section-title">Comments</h2>
+<div id="comment-form-wrap">
+<div class="alert alert-error hidden" id="comment-alert"></div>
+<form id="comment-form">
+<div class="form-group">
+<label for="comment-input" class="sr-only">Write a comment</label><textarea id="comment-input" placeholder="Write a comment…" rows="3" maxlength="3000"></textarea>
+</div>
+<div style="display:flex;justify-content:flex-end"><button type="submit" class="btn btn-primary btn-sm" id="comment-submit">Post comment</button></div>
+</form>
+</div>
+<div id="comments-list" style="margin-top:1rem"></div></section><div id="report-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem"><div class="auth-card" style="max-width:420px;width:100%">
+<h2 style="margin-bottom:1rem">Report this post</h2>
+<div class="alert alert-error hidden" id="report-alert"></div>
+<div class="form-group">
+<label for="report-reason">Reason</label><textarea id="report-reason" rows="3" maxlength="1000" placeholder="Describe the issue…"></textarea>
+</div>
+<div style="display:flex;gap:.5rem;justify-content:flex-end">
+<button class="btn btn-secondary btn-sm" id="report-cancel">Cancel</button><button class="btn btn-danger btn-sm" id="report-submit">Submit report</button>
+</div>
+</div></div>
+</div>
+<script type="module" src="js/pages/post.js"></script>
 </body>
 </html>

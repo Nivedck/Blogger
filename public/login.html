@@ -1,72 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Log In – Bloggr</title>
-  <meta name="description" content="Log in to your Bloggr account to read, write and connect.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Log In – Bloggr</title>
+<meta name="description" content="Log in to your Bloggr account to read, write and connect.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <h1 class="auth-title">Log in</h1>
-      <div class="alert alert-error hidden" id="alert" role="alert"></div>
-      <form id="login-form" novalidate>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
-        </div>
-        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%;margin-top:.25rem">
-          Log in
-        </button>
-      </form>
-      <p class="auth-footer">No account? <a href="register.html">Register</a></p>
-    </div>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const { api: apiClient, getSession: getSessionFn, renderNav: renderNavFn, showAlert: showAlertFn, hideAlert: hideAlertFn, el: elFn } = window.Bloggr;
-
-    (async () => {
-      await renderNavFn("/login.html");
-      // Already logged in? Go to explore
-      const user = await getSessionFn();
-      if (user) { window.location.href = "/explore.html"; return; }
-    })();
-
-    elFn("login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideAlertFn("alert");
-      const btn = elFn("submit-btn");
-      btn.disabled = true;
-      btn.textContent = "Logging in…";
-
-      const { ok, data } = await apiClient("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: elFn("email").value.trim(),
-          password: elFn("password").value
-        })
-      });
-
-      if (ok) {
-        window.location.href = "/explore.html";
-      } else {
-        showAlertFn("alert", data?.message || "Login failed");
-        btn.disabled = false;
-        btn.textContent = "Log in";
-      }
-    });
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="auth-wrap"><div class="auth-card">
+<h1 class="auth-title">Log in</h1>
+<div class="alert alert-error hidden" id="alert" role="alert"></div>
+<form id="login-form" novalidate>
+<div class="form-group">
+<label for="email">Email</label><input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
+</div>
+<div class="form-group">
+<label for="password">Password</label><input type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+</div>
+<button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%;margin-top:.25rem">Log in</button>
+</form>
+<p class="auth-footer">No account? <a href="register.html">Register</a></p>
+</div></div>
+<script type="module" src="js/pages/login.js"></script>
 </body>
 </html>

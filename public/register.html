@@ -1,85 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Register – Bloggr</title>
-  <meta name="description" content="Create a Bloggr account to start writing and engaging with the community.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register – Bloggr</title>
+<meta name="description" content="Create a Bloggr account to start writing and engaging with the community.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="auth-wrap">
-    <div class="auth-card">
-      <h1 class="auth-title">Create account</h1>
-      <div class="alert alert-error hidden" id="alert" role="alert"></div>
-      <form id="register-form" novalidate>
-        <div class="form-group">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" autocomplete="name" required
-            placeholder="Your name" maxlength="100">
-        </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" autocomplete="email" required
-            placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label for="password">Password <span class="text-muted text-sm">(min 8 characters)</span></label>
-          <input type="password" id="password" name="password" autocomplete="new-password" required
-            placeholder="••••••••" minlength="8">
-        </div>
-        <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%;margin-top:.25rem">
-          Create account
-        </button>
-      </form>
-      <p class="auth-footer">Already have an account? <a href="login.html">Log in</a></p>
-    </div>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const { api: apiClient, getSession: getSessionFn, renderNav: renderNavFn, showAlert: showAlertFn, hideAlert: hideAlertFn, el: elFn } = window.Bloggr;
-
-    (async () => {
-      await renderNavFn("/register.html");
-      const user = await getSessionFn();
-      if (user) { window.location.href = "/explore.html"; return; }
-    })();
-
-    elFn("register-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideAlertFn("alert");
-      const btn = elFn("submit-btn");
-
-      const name     = elFn("name").value.trim();
-      const email    = elFn("email").value.trim();
-      const password = elFn("password").value;
-
-      if (password.length < 8) {
-        showAlertFn("alert", "Password must be at least 8 characters");
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = "Creating account…";
-
-      const { ok, data } = await apiClient("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ name, email, password })
-      });
-
-      if (ok) {
-        window.location.href = "/explore.html";
-      } else {
-        showAlertFn("alert", data?.message || "Registration failed");
-        btn.disabled = false;
-        btn.textContent = "Create account";
-      }
-    });
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="auth-wrap"><div class="auth-card">
+<h1 class="auth-title">Create account</h1>
+<div class="alert alert-error hidden" id="alert" role="alert"></div>
+<form id="register-form" novalidate>
+<div class="form-group">
+<label for="name">Name</label><input type="text" id="name" name="name" autocomplete="name" required placeholder="Your name" maxlength="100">
+</div>
+<div class="form-group">
+<label for="email">Email</label><input type="email" id="email" name="email" autocomplete="email" required placeholder="you@example.com">
+</div>
+<div class="form-group">
+<label for="password">Password <span class="text-muted text-sm">(min 8 characters)</span></label><input type="password" id="password" name="password" autocomplete="new-password" required placeholder="••••••••" minlength="8">
+</div>
+<button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%;margin-top:.25rem">Create account</button>
+</form>
+<p class="auth-footer">Already have an account? <a href="login.html">Log in</a></p>
+</div></div>
+<script type="module" src="js/pages/register.js"></script>
 </body>
 </html>

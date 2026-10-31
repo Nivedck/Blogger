@@ -1,126 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Write – Bloggr</title>
-  <meta name="description" content="Write and publish a blog post on Bloggr.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Write – Bloggr</title>
+<meta name="description" content="Write and publish a blog post on Bloggr.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
-
-  <div class="editor-wrap">
-    <div class="alert alert-error hidden" id="alert" role="alert"></div>
-    <div class="alert alert-success hidden" id="success-alert"></div>
-
-    <input type="text" id="title-input" class="editor-title-input"
-      placeholder="Post title…" maxlength="200" style="width:100%">
-
-    <div class="form-group mt-sm">
-      <label for="tags-input">Tags <span class="text-muted text-sm">(comma-separated)</span></label>
-      <input type="text" id="tags-input" placeholder="e.g. tech, writing, news">
-    </div>
-
-    <div class="form-group">
-      <label for="content-input">Content</label>
-      <textarea id="content-input" class="editor-content-input"
-        placeholder="Write your post…" style="min-height:400px"></textarea>
-    </div>
-
-    <div class="editor-actions">
-      <button class="btn btn-secondary" id="save-draft-btn">Save draft</button>
-      <button class="btn btn-primary"   id="publish-btn">Publish</button>
-      <button class="btn btn-danger hidden" id="delete-btn" style="margin-left:auto">Delete post</button>
-    </div>
-
-    <p class="text-muted text-sm mt-sm" id="status-row"></p>
-  </div>
-
-  <script src="shared.js"></script>
-  <script>
-    const { api: apiClient, requireSession: requireSessionFn, renderNav: renderNavFn, el: elFn, showAlert: showAlertFn, hideAlert: hideAlertFn, fmtDate: fmtDateFn } = window.Bloggr;
-
-    const params = new URLSearchParams(window.location.search);
-    const editId = params.get("id"); 
-    let currentBlog = null;
-
-    (async () => {
-      const user = await requireSessionFn("/login.html");
-      if (!user) return;
-      await renderNavFn("/editor.html");
-
-      if (editId) {
-        await loadExisting();
-      } else {
-        document.title = "New post – Bloggr";
-      }
-    })();
-
-    async function loadExisting() {
-      const { ok, data } = await apiClient(`/api/blogs/${editId}`);
-      if (!ok) { showAlertFn("alert", "Post not found"); return; }
-      currentBlog = data.blog;
-      document.title = `Edit: ${currentBlog.title} – Bloggr`;
-      elFn("title-input").value   = currentBlog.title;
-      elFn("content-input").value = currentBlog.content;
-      elFn("tags-input").value    = (currentBlog.tags || []).join(", ");
-      elFn("status-row").textContent = `Status: ${currentBlog.status}  ·  Last saved: ${fmtDateFn(currentBlog.updatedAt)}`;
-      elFn("delete-btn").classList.remove("hidden");
-    }
-
-    function parseTags(raw) {
-      return raw.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
-    }
-
-    async function save(status) {
-      hideAlertFn("alert");
-      hideAlertFn("success-alert");
-      const title   = elFn("title-input").value.trim();
-      const content = elFn("content-input").value.trim();
-      const tags    = parseTags(elFn("tags-input").value);
-
-      if (!title)   { showAlertFn("alert", "Title is required"); return; }
-      if (!content) { showAlertFn("alert", "Content is required"); return; }
-
-      const body = JSON.stringify({ title, content, tags, status });
-
-      let ok, data;
-      if (editId) {
-        ({ ok, data } = await apiClient(`/api/blogs/${editId}`, { method: "PUT", body }));
-      } else {
-        ({ ok, data } = await apiClient("/api/blogs", { method: "POST", body }));
-      }
-
-      if (ok) {
-        const blog = data.blog;
-        const verb = status === "published" ? "Published" : "Draft saved";
-        elFn("success-alert").textContent = verb + "!";
-        elFn("success-alert").classList.remove("hidden");
-        elFn("status-row").textContent = `Status: ${blog.status}  ·  Last saved: ${fmtDateFn(blog.updatedAt)}`;
-        if (status === "published") {
-          setTimeout(() => { window.location.href = `/post.html?id=${blog._id}`; }, 800);
-        } else if (!editId) {
-          history.replaceState({}, "", `editor.html?id=${blog._id}`);
-          currentBlog = blog;
-          elFn("delete-btn").classList.remove("hidden");
-        }
-      } else {
-        showAlertFn("alert", data?.message || "Could not save post");
-      }
-    }
-
-    elFn("save-draft-btn").addEventListener("click", () => save("draft"));
-    elFn("publish-btn").addEventListener("click", () => save("published"));
-
-    elFn("delete-btn").addEventListener("click", async () => {
-      if (!editId) return;
-      if (!confirm("Delete this post permanently?")) return;
-      const { ok } = await apiClient(`/api/blogs/${editId}`, { method: "DELETE" });
-      if (ok) window.location.href = "/explore.html";
-    });
-  </script>
+<nav class="nav" id="main-nav" aria-label="Main navigation"></nav><div class="editor-wrap">
+<div class="alert alert-error hidden" id="alert" role="alert"></div>
+<div class="alert alert-success hidden" id="success-alert"></div>
+<input type="text" id="title-input" class="editor-title-input" placeholder="Post title…" maxlength="200" style="width:100%"><div class="form-group mt-sm">
+<label for="tags-input">Tags <span class="text-muted text-sm">(comma-separated)</span></label><input type="text" id="tags-input" placeholder="e.g. tech, writing, news">
+</div>
+<div class="form-group">
+<label for="content-input">Content</label><textarea id="content-input" class="editor-content-input" placeholder="Write your post…" style="min-height:400px"></textarea>
+</div>
+<div class="editor-actions">
+<button class="btn btn-secondary" id="save-draft-btn">Save draft</button><button class="btn btn-primary" id="publish-btn">Publish</button><button class="btn btn-danger hidden" id="delete-btn" style="margin-left:auto">Delete post</button>
+</div>
+<p class="text-muted text-sm mt-sm" id="status-row"></p>
+</div>
+<script type="module" src="js/pages/editor.js"></script>
 </body>
 </html>
