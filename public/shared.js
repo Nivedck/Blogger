@@ -58,7 +58,7 @@ async function renderNav(activeHref = "") {
 
   nav.innerHTML = `
     <div class="nav-inner">
-      <a class="nav-brand" href="/explore.html">Bloggr</a>
+      <a class="nav-brand" href="/"><span class="brand-mark">B</span>Bloggr</a>
       <ul class="nav-links">
         ${links.map(l =>
           `<li><a href="${l.href}" ${l.id ? `id="${l.id}"` : ""}

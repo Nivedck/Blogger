@@ -8,41 +8,114 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
-  <style>
-    .hero {
-      max-width: 600px;
-      margin: 80px auto;
-      text-align: center;
-      padding: 0 1.25rem;
-    }
-    .hero h1 { font-size: 2.4rem; margin-bottom: .75rem; }
-    .hero p   { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; }
-    .hero-actions { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; }
-  </style>
 </head>
-<body>
+<body class="home-page">
   <nav class="nav" id="main-nav" aria-label="Main navigation"></nav>
 
-  <div class="hero">
-    <h1>Read and write together</h1>
-    <p>Discover ideas from people who think deeply and write well. Share yours.</p>
-    <div class="hero-actions" id="hero-actions">
-      <a href="explore.html" class="btn btn-secondary">Explore posts</a>
-      <a href="register.html" class="btn btn-primary">Get started</a>
-    </div>
-  </div>
+  <main>
+    <section class="home-hero" aria-labelledby="home-title">
+      <div>
+        <span class="eyebrow">An independent reading room</span>
+        <h1 class="home-title" id="home-title">Ideas deserve a little more room.</h1>
+        <p class="home-copy">Bloggr is a home for thoughtful writing, curious readers, and conversations that continue after the page ends.</p>
+        <div class="hero-actions" id="hero-actions">
+          <a href="explore.html" class="btn btn-primary">Start reading <span aria-hidden="true">→</span></a>
+          <a href="register.html" class="btn btn-secondary">Join Bloggr</a>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <p class="hero-art-copy">Read widely.<br>Write honestly.</p>
+      </div>
+    </section>
+
+    <section class="home-feature" id="featured-section" aria-labelledby="featured-heading">
+      <div class="section-kicker">
+        <h2 id="featured-heading">Fresh from the community</h2>
+        <a href="explore.html">See every story <span aria-hidden="true">→</span></a>
+      </div>
+      <article class="feature-card" id="featured-post">
+        <div class="feature-copy">
+          <span class="eyebrow">Loading a story</span>
+          <h3>Finding something worth reading…</h3>
+        </div>
+        <div class="feature-art" aria-hidden="true"></div>
+      </article>
+    </section>
+
+    <section class="home-values" aria-labelledby="values-heading">
+      <div class="home-values-intro">
+        <span class="eyebrow">A quieter corner of the internet</span>
+        <h2 id="values-heading">Come for a quick thought. Stay for a good conversation.</h2>
+      </div>
+      <div class="value-grid">
+        <article class="value-card">
+          <span class="value-number">01</span>
+          <h3>Read with intention</h3>
+          <p>Browse stories by topic, follow your curiosity, and give ideas the attention they deserve.</p>
+        </article>
+        <article class="value-card value-card-accent">
+          <span class="value-number">02</span>
+          <h3>Join the exchange</h3>
+          <p>Vote, comment, and reply when a piece of writing moves your thinking forward.</p>
+        </article>
+        <article class="value-card">
+          <span class="value-number">03</span>
+          <h3>Leave something behind</h3>
+          <p>Publish a draft when it is ready. Your page is waiting for the point only you can make.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="home-cta" aria-labelledby="cta-heading">
+      <span class="eyebrow">Your turn</span>
+      <h2 id="cta-heading">The next good story<br>could be yours.</h2>
+      <p>Find a thought worth following, or start one of your own.</p>
+      <div class="hero-actions" id="cta-actions">
+        <a href="register.html" class="btn btn-primary">Create an account <span aria-hidden="true">→</span></a>
+        <a href="explore.html" class="btn btn-secondary">Keep exploring</a>
+      </div>
+    </section>
+  </main>
 
   <script src="shared.js"></script>
   <script>
-    const { getSession: getSessionFn, renderNav: renderNavFn, el: elFn } = window.Bloggr;
+    const {
+      api: apiClient, getSession: getSessionFn, renderNav: renderNavFn,
+      el: elFn, escHtml: escHtmlFn, timeAgo: timeAgoFn
+    } = window.Bloggr;
+
+    async function loadFeaturedPost() {
+      const { ok, data } = await apiClient("/api/blogs?page=1");
+      const blog = ok && data?.blogs?.[0];
+      if (!blog) {
+        elFn("featured-section").classList.add("hidden");
+        return;
+      }
+
+      const author = escHtmlFn(blog.author?.name || "A Bloggr writer");
+      const date = timeAgoFn(blog.publishedAt || blog.createdAt);
+      elFn("featured-post").innerHTML = `
+        <div class="feature-copy">
+          <span class="eyebrow">Featured reading</span>
+          <h3><a href="/post.html?id=${escHtmlFn(blog._id)}">${escHtmlFn(blog.title)}</a></h3>
+          <p>${escHtmlFn(blog.excerpt || "A fresh perspective from the Bloggr community.")}</p>
+          <p class="feature-meta">By ${author}${date ? ` · ${escHtmlFn(date)}` : ""}</p>
+        </div>
+        <div class="feature-art" aria-hidden="true"></div>`;
+    }
+
     (async () => {
       await renderNavFn();
       const user = await getSessionFn();
       if (user) {
         elFn("hero-actions").innerHTML = `
-          <a href="explore.html" class="btn btn-secondary">Explore posts</a>
-          <a href="editor.html"  class="btn btn-primary">Write a post</a>`;
+          <a href="explore.html" class="btn btn-secondary">Explore stories</a>
+          <a href="editor.html" class="btn btn-primary">Write something <span aria-hidden="true">→</span></a>`;
+        elFn("cta-actions").innerHTML = `
+          <a href="editor.html" class="btn btn-primary">Write a story <span aria-hidden="true">→</span></a>
+          <a href="explore.html" class="btn btn-secondary">Keep exploring</a>`;
       }
+      await loadFeaturedPost();
     })();
   </script>
 </body>
