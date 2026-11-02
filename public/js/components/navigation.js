@@ -22,7 +22,7 @@ export async function renderNav(activeHref = "") {
 
   nav.innerHTML = `
     <div class="nav-inner">
-      <a class="nav-brand" href="/"><span class="brand-mark">B</span>Bloggr</a>
+      <a class="nav-brand" href="/" aria-label="Bloggr home"><img class="nav-logo" src="/icon.png" alt="Bloggr"></a>
       <ul class="nav-links">
         ${links.map(link =>
           `<li><a href="${link.href}" ${link.id ? `id="${link.id}"` : ""}
